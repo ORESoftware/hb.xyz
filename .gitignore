@@ -13,6 +13,7 @@ test/dist/*
 *.log
 *.tgz
 *.pem
+*.pem.pub
 
 ### inverse
 !dist/.gitkeep
