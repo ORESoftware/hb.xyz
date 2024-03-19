@@ -7,8 +7,7 @@ import * as fs from 'fs';
 import * as cp from 'child_process';
 import * as uuid from 'uuid';
 import pt from 'prepend-transform';
-import chalk from 'chalk';
-
+import * as chalk from 'chalk';
 
 const router = express.Router();
 
@@ -81,10 +80,11 @@ router.post('/addkey', /// middleware id for capture errors thrown within
       const k = cp.spawn('bash');
       k.stdin.end(`
 
-         mkdir -p "$HOME/.ssh"
-         docker run -d --entrypoint tail -f /dev/null --name '${containerName}'
-         echo 'did the ssh thing - success'
+         mkdir -p "$HOME/.ssh";
+         docker run -d --entrypoint tail -f /dev/null --name '${containerName}' pytorch/pytorch:latest;
+         echo 'did the ssh thing - success';
          docker ps;
+         docker exec '${containerName}' echo "Ping";
          exit 0;
 
       `);

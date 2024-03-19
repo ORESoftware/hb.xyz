@@ -10,7 +10,7 @@ import * as path from "path";
 import * as favicon from 'serve-favicon';
 import * as http from "http";
 
-const app = express()
+const app = express();
 
 export const r2gSmokeTest = function () {
   // r2g command line app uses this exported function
