@@ -13,12 +13,14 @@ CircleCI build status:
 :raspberry:
 :banana:
 
-## TSLS - TypeScript Library Skeleton
+##  hb.xyz
 
-<details>
-  <summary>Hidden Details!</summary>
- LOL j/k
-</details>
+Steps taken:
+
+1. install docker on ubuntu machine
+2. run pytorch container on machine
+3. start a docker container with uuid abc, and then echo to user
+4. `docker run -ti --entrypoint bash pytorch/pytorch:latest`
 
 
 ####  Your Project Readme Goes Here
