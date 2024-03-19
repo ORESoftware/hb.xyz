@@ -46,12 +46,12 @@ router.post('/addkey', /// middleware id for capture errors thrown within
     const t = req.body as Payload;
 
     if (!(t && typeof t === 'object')) {
-      next(vutil.toErrorObj('malformed req', "b82d8403-a7f1-457b-aa41-d5a7759204c8"));
+      next(vutil.toErrorObj('malformed req', "6b4fd6c6-3aab-41d9-a375-174d26ae0c0e"));
       return;
     }
 
     if (!(t && typeof t.sshKey === 'string' && t.sshKey.length > 10)) {
-      next(vutil.toErrorObj('malformed req:', "vid/1f4dc2478e54"));
+      next(vutil.toErrorObj('malformed req:', "vid/08523e05-18b8-4cdf-9338-536143ec08a9"));
       return;
     }
 
