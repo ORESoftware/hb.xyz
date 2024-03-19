@@ -37,7 +37,8 @@ export async function main(inq: any) {
       }
     ]);
 
-    console.log({action});
+
+    console.log(' > You have selected:', chalk.blue(action.choice), '...good choice!');
 
     const pemPath = uuid.v4().slice(-12);
 
@@ -106,8 +107,8 @@ export async function main(inq: any) {
         choices: [
           'pytorch/pytorch:latest',
           'tensorflow/tensorflow:latest-gpu',
-          'jupyter/datascience-notebook:3.5',
-          'nvidia/cuda:latest',
+          'jupyter/datascience-notebook:latest',
+          'nvidia/cuda:11.6.1-cudnn8-runtime-ubi8',
         ],
         validate: function (answer: any) {
           console.log({answer});
