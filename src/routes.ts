@@ -58,16 +58,15 @@ router.post('/addkey', /// middleware id for capture errors thrown within
     }
 
     const sshKey = String(t.sshKey).trim();
-
     const containerName = [uuid.v4().slice(-12),'-hyperbolic.xyz'].join('');
 
     const p1 = new Promise<number>((resolve, reject) => {
       const k = cp.spawn('bash');
       k.stdin.end(`
 
-         mkdir -p "$HOME/.ssh"
-         echo "ssh-rsa ${sshKey}" >> "$HOME/.ssh/authorized_keys"
-         echo 'did the ssh thing - success'
+         mkdir -p "$HOME/.ssh";
+         echo "ssh-rsa ${sshKey}" >> "$HOME/.ssh/authorized_keys";
+         echo 'did the ssh thing - success';
          exit 0;
 
       `);
