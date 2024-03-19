@@ -12,6 +12,12 @@ CircleCI build status:
 
 ##  hb.xyz
 
+Choices
+
+1. generate a new ssh key
+2. pick a server to upload it to
+3. pick an image to deploy
+
 Steps taken:
 
 1. install docker on ubuntu machine
@@ -21,6 +27,7 @@ Steps taken:
 5. on ubuntu remote - git clone server from github
 3. start a docker container with uuid abc, and then echo to user
 4. `docker run -ti --entrypoint bash pytorch/pytorch:latest`
+
 
 
 ## Launching

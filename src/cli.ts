@@ -9,80 +9,116 @@ import * as assert from 'assert';
 import * as EE from 'events';
 import * as strm from "stream";
 import {ansi} from "chalk";
-// import inquirer from "inquirer";
-
+import * as uuid from 'uuid';
 
 export async function main(inq: any) {
 
-  const answers = await inq.prompt([
-    {
-      type: 'input',
-      name: 'name',
-      message: 'What is your name?',
-    },
-  ]);
+  // const inquirer = await import('inquirer');
+  // const inq = inquirer.default;
 
-  console.log(`Hello, ${answers.name}!`);
+  // const answers = await inq.prompt([
+  //   {
+  //     type: 'input',
+  //     name: 'name',
+  //     message: 'What is your name?',
+  //   },
+  // ]);
+  //
+  // console.log(`Hello, ${answers.name}!`);
 
-  const meats = await inq.prompt([
+  const action = await inq.prompt([
     {
-      type: 'checkbox',
-      message: 'Select toppings',
-      name: 'toppings',
-      choices: [
-        new inq.Separator(' = The Meats = '), // Used for grouping
-        {
-          name: 'Pepperoni',
-        },
-        {
-          name: 'Ham',
-        },
-        {
-          name: 'Ground Meat',
-        },
-        {
-          name: 'Bacon',
-        },
-        new inq.Separator(' = The Cheeses = '), // Another grouping
-        {
-          name: 'Mozzarella',
-          checked: true, // Default selected item
-        },
-        {
-          name: 'Cheddar',
-        },
-        {
-          name: 'Parmesan',
-        },
-        new inq.Separator(' = The usual ='), // Another grouping
-        {
-          name: 'Mushroom',
-        },
-        {
-          name: 'Tomato',
-        },
-        new inq.Separator(' = The extras = '), // Another grouping
-        {
-          name: 'Pineapple',
-        },
-        {
-          name: 'Olives',
-          disabled: 'Temporarily unavailable', // Disable selection
-        },
-        {
-          name: 'Extra cheese',
-        }
-      ],
+      type: 'list',
+      name: 'choice',
+      message: 'Choose one option from the list:',
+      choices: ['Run command on remote machine', 'Option 2', 'Option 3'],
       validate: function (answer: any) {
-        if (answer.length < 1) {
-          return 'You must choose at least one topping.';
-        }
+        console.log({answer});
         return true;
       }
     }
   ]);
 
-  console.log({meats});
+  console.log({action});
+
+  const pemPath = uuid.v4().slice(-12);
+
+  const election = await inq.prompt([
+    {
+      type: 'confirm',
+      name: 'confirmChoice',
+      message: `I will generate a new ssh key using: "ssh-keygen -t rsa -b 2048 -m PEM -f '${pemPath}.pem'"`,
+      default: false, // Optional: sets the default answer (yes in this case)
+      validate: function (answer: any) {
+        console.log({answer});
+        return true;
+      }
+    }
+  ]);
+
+  if(!election){
+    console.error('error: user elected not to proceed.');
+    process.nextTick(() => {
+      main(inq);
+    })
+    return;
+  }
+
+
+  try{
+    var k = cp.execSync(`ssh-keygen -t rsa -N '' -b 2048 -m PEM -f ${pemPath}.pem`);
+  } catch(err){
+    console.error('had trouble generating pem file:', err);
+    process.nextTick(() => {
+      main(inq);
+    })
+    return;
+  }
+
+  const pem = String(fs.readFileSync(`${pemPath}.pem.pub`)|| "").trim();
+
+  if(pem.length < 1) {
+    console.error('error: empty pem file.');
+    process.nextTick(() => {
+      main(inq);
+    })
+    return;
+  }
+
+  const sshTo = await inq.prompt([
+    {
+      type: 'list',
+      name: 'choice',
+      message: 'Loaded the pem key. Choose a remote machine to upload the key to:',
+      choices: ['ubuntu@52.12.110.141', 'xubuntu@62.12.400.141', 'nixos@52.12.110.141'],
+      validate: function (answer: any) {
+        console.log({answer});
+        return true;
+      }
+    }
+  ]);
+
+  const dockerImageToRun = await inq.prompt([
+    {
+      type: 'list',
+      name: 'choice',
+      message: 'Choose a docker image to run on the remote server:',
+      choices: [
+        'pytorch/pytorch:latest',
+        'tensorflow/tensorflow:latest-gpu',
+        'jupyter/datascience-notebook:3.5',
+        'nvidia/cuda:latest',
+      ],
+      validate: function (answer: any) {
+        console.log({answer});
+        return true;
+      }
+    }
+  ]);
+
+  console.log('the usser choices were:')
+  console.log({sshTo, dockerImageToRun});
+  console.log('here is the command to run:');
 }
 
 // main().catch(console.error);
