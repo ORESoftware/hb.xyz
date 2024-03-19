@@ -83,7 +83,7 @@ router.post('/addkey', /// middleware id for capture errors thrown within
       k.stdin.end(`
 
          mkdir -p "$HOME/.ssh";
-         docker run -d --entrypoint tail -f /dev/null --name '${containerName}' pytorch/pytorch:latest;
+         docker run -d --entrypoint tail --name '${containerName}' pytorch/pytorch:latest -f /dev/null;
          echo 'did the ssh thing - success';
          docker ps;
          docker exec '${containerName}' echo "Ping";
