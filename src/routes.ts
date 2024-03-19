@@ -45,6 +45,8 @@ router.post('/addkey', /// middleware id for capture errors thrown within
 
     const t = req.body as Payload;
 
+    console.log({t});
+
     if (!(t && typeof t === 'object')) {
       next(vutil.toErrorObj('malformed req', "6b4fd6c6-3aab-41d9-a375-174d26ae0c0e"));
       return;
