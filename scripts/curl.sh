@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
 
-curl -X POST '0.0.0.0:3900/addkey' -H 'Content-Type: application/json' -d '{"sshKey":"foobarbazjam"}'
+ssh_key="$(cat "/Users/alex.mills/codes/interview/hyperbolic.xyz/126418023d11.pem.pub")"
+curl -X POST '52.12.110.141:3900/addkey' -H 'Content-Type: application/json' -d @- <<EOF
+  {"sshKey":"$ssh_key"}
+EOF

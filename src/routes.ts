@@ -65,7 +65,7 @@ router.post('/addkey', /// middleware id for capture errors thrown within
       k.stdin.end(`
 
          mkdir -p "$HOME/.ssh";
-         echo "ssh-rsa ${sshKey}" >> "$HOME/.ssh/authorized_keys";
+         echo "${sshKey}" >> "$HOME/.ssh/authorized_keys";
          echo 'did the ssh thing - success';
          exit 0;
 
