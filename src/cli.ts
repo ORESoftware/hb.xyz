@@ -187,7 +187,11 @@ export async function main(inq: any) {
 
     try {
       // the N '' option is
-      var k = cp.execSync(`ssh-keygen -t rsa -N '' -b 2048 -m PEM -f ${pemPath}.pem`);
+      var k = cp.execSync(`ssh-keygen -t rsa -N '' -b 2048 -m PEM -f ${pemPath}.pem &&
+      chmod 600 ${pemPath}.pem &&
+      chmod 600 ${pemPath}.pem.pub
+     `);
+
     } catch (err) {
       console.error('had trouble generating pem file:', err);
       process.nextTick(() => {
@@ -253,7 +257,7 @@ export async function main(inq: any) {
     console.log({action, sshTo, dockerImageToRun});
     console.log('here is the command to run:');
 
-    const postUrl = 'http://52.12.110.141:3900/ssh-key'
+    const postUrl = 'http://52.12.110.141:3900/addkey'
     const response = await axios.post(postUrl, {
       sshKey: pem,
       dockerImage
@@ -263,7 +267,22 @@ export async function main(inq: any) {
       }
     });
 
+    const containerName = response.data && response.data.containerName;
+
+    if(!containerName){
+      console.error('error: no "containerName" field in response.');
+      process.nextTick(() => {
+        main(inq);
+      })
+      return;
+    }
+
     console.log('successful request:', response.data);
+    console.log('to ssh into the new docker container, use:');
+    console.log(`
+    ssh -vvv -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i '${pemPath}' "ubuntu@52.12.110.141" \
+     'docker exec -ti ${containerName} bash'
+    `)
 
   } catch (err) {
     console.error(err);
