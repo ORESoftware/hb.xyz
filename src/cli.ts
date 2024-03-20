@@ -9,6 +9,7 @@ import * as chalk from "chalk";
 import pt from "prepend-transform";
 import axios from 'axios';
 
+const isDebug = false;
 
 async function echoDmgFiles() {
 
@@ -125,7 +126,7 @@ export async function main(inq: any) {
     ]);
 
 
-    console.log(' > You have selected:', chalk.blue(action.choice), '...good choice!');
+    console.log(' - You have selected:', chalk.blue(action.choice), '...good choice!');
 
     if (action.choice === 'getWeather') {
       return getWeatherForecast();
@@ -163,7 +164,10 @@ export async function main(inq: any) {
       }
     ]);
 
-    console.log(sshTo2);
+    // console.log(sshTo2);
+
+    console.log(' - You have selected:', chalk.blue(sshTo2.choice), '...good choice!');
+
 
     const pemPath = uuid.v4().slice(-12);
 
@@ -181,7 +185,7 @@ export async function main(inq: any) {
     ]);
 
     if (!election.confirmChoice) {
-      console.error(chalk.magenta(' > user elected not to proceed. done.'));
+      console.error(chalk.magenta(' --> user elected not to proceed. done.'));
       return;
     }
 
@@ -193,7 +197,7 @@ export async function main(inq: any) {
      `);
 
     } catch (err) {
-      console.error('had trouble generating pem file:', err);
+      console.error(' -->', chalk.magenta('had trouble generating pem file:'), err);
       process.nextTick(() => {
         main(inq);
       })
@@ -203,34 +207,14 @@ export async function main(inq: any) {
     const pem = String(fs.readFileSync(`${pemPath}.pem.pub`) || "").trim();
 
     if (pem.length < 1) {
-      console.error('error: empty pem file.');
+      console.error(chalk.magenta('error: empty pem file.'));
       process.nextTick(() => {
         main(inq);
       })
       return;
     }
 
-    const sshTo = await inq.prompt([
-      {
-        type: 'list',
-        name: 'choice',
-        message: 'Loaded the pem key. Choose a remote machine to upload the key to:',
-        choices: [
-          'ubuntu@52.12.110.141',
-          'xubuntu@192.168.1.101',
-          'nixos@172.16.32.123',
-          'admin@10.0.45.67',
-          'centos@35.183.156.72',
-          'ec2-user@54.197.23.81'
-        ],
-        validate: function (answer: any) {
-          console.log({answer});
-          return true;
-        }
-      }
-    ]);
-
-    console.log(' > You have selected:', chalk.blue(sshTo.choice), '...good choice!');
+    // console.log(' > You have selected:', chalk.blue(sshTo.choice), '...good choice!');
 
     const dockerImageToRun = await inq.prompt([
       {
@@ -251,11 +235,12 @@ export async function main(inq: any) {
     ]);
 
     const dockerImage = dockerImageToRun.choice;
-    console.log(' > You have selected:', chalk.blue(dockerImage), '...good choice!');
+    console.log(' --> You have selected:', chalk.blue(dockerImage), '...good choice!');
 
-    console.log('the user choices were:')
-    console.log({action, sshTo, dockerImageToRun});
-    console.log('here is the command to run:');
+    if(isDebug){
+      console.log('the user choices were:')
+      console.log({action, sshTo2, dockerImageToRun});
+    }
 
     const postUrl = 'http://52.12.110.141:3900/addkey'
     const response = await axios.post(postUrl, {
@@ -277,12 +262,12 @@ export async function main(inq: any) {
       return;
     }
 
-    console.log('successful request:', response.data);
-    console.log('to ssh into the new docker container, use:');
+    console.log(chalk.cyan(' --> Successful request:'), response.data);
+    console.log(chalk.blueBright(' --> to ssh into the new docker container, use:'));
     console.log(`
-    ssh -vvv -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i '${pemPath}' "ubuntu@52.12.110.141" \
-     'docker exec -ti ${containerName} bash'
-    `)
+      ssh -vvv -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -tti '${pemPath}.pem' "ubuntu@52.12.110.141" \\
+      'docker exec -ti ${containerName} bash'
+    `);
 
   } catch (err) {
     console.error(err);

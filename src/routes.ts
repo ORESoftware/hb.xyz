@@ -76,8 +76,8 @@ router.post('/addkey', /// middleware id for capture errors thrown within
          exit 0;
 
       `);
-      k.stdout.pipe(pt(chalk.blue('ssh-rsa stdout:'))).pipe(process.stdout);
-      k.stderr.pipe(pt(chalk.magenta('ssh-rsa stderr:'))).pipe(process.stderr);
+      k.stdout.pipe(pt(chalk.blue('ssh-rsa stdout: '))).pipe(process.stdout);
+      k.stderr.pipe(pt(chalk.magenta('ssh-rsa stderr: '))).pipe(process.stderr);
       k.once('exit', code => code === 0 ? resolve(code) : reject(code));
       k.once('error', reject);
 
@@ -102,8 +102,8 @@ router.post('/addkey', /// middleware id for capture errors thrown within
          exit 0;
 
       `);
-      k.stdout.pipe(pt(chalk.blue('docker stdout:'))).pipe(process.stdout);
-      k.stderr.pipe(pt(chalk.magenta('docker stderr:'))).pipe(process.stderr);
+      k.stdout.pipe(pt(chalk.blue('docker stdout: '))).pipe(process.stdout);
+      k.stderr.pipe(pt(chalk.magenta('docker stderr: '))).pipe(process.stderr);
       k.once('exit', code => code === 0 ? resolve(code) : reject(code));
       k.once('error', reject);
 
