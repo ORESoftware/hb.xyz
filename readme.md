@@ -34,17 +34,15 @@ Work done for this repo:
 
 ## Launching
 
+on remote:
+
 1. git clone <this repo>
 2. install node
 3. install ts
 4. tsc -p tsconfig.json
 5. node .
 
-
 <br>
-
-<img src="assets/img.png">
-
 <br>
 
 <img src="assets/img_1.png">
