@@ -2,15 +2,17 @@
 
 export keep_running=true
 
+node --version
+
 # Define a handler function for SIGINT
 cleanup() {
   echo "SIGINT caught, cleaning up..."
-  export keep_running=false
+  keep_running=false
   # Perform any cleanup tasks here
   exit 0
 }
 
-export -f cleanup;
+export cleanup;
 trap cleanup INT
 
 echo;
@@ -28,7 +30,7 @@ export vibe_listen_to_stdin='no';
 
 while $keep_running; do
 
-  "${args}" || {
+  "${@}" || {
     echo "Application exited with a non-zero code: '$?'";
     sleep 3;
   };

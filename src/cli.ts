@@ -60,9 +60,32 @@ async function getWeatherForecast() {
 
 
   const res = await axios.get(url);
-  const result = await res.data
+  const result = ([res && res.data && res.data.list].flat(Infinity).filter(Boolean))
 
-  console.log({result});
+  console.log(result[0] || 'sorry, no weather result');
+
+}
+
+async function getGithubRepos() {
+
+
+  const apiKey = '9cb326bd59cb035227398bf28a4cb309'
+  const url = `https://api.github.com/search/repositories?q=stars:>1&sort=stars&order=desc&per_page=20`; // URL for Fahrenheit
+
+
+  const res = await axios.get(url);
+  const result = ([res && res.data && res.data.items].flat(Infinity).filter(Boolean))
+
+  if(result.length < 1){
+    console.log('sorry, not GH repos found.')
+    return;
+  }
+
+  for(const v of result){
+    console.log('name:', v.full_name, '⭐ star count::', v.stargazers_count);
+  }
+
+  console.log('(done with results)');
 
 }
 
@@ -91,7 +114,8 @@ export async function main(inq: any) {
         choices: [
           {name: 'Run container on remote machine', value: 'runContainer'},
           {name: 'Get weather forecast in your area.', value: 'getWeather'},
-          {name: 'List all .dmg files in Downloads folder', value: 'listDmgFiles'}
+          {name: 'List all .dmg files in Downloads folder', value: 'listDmgFiles'},
+          {name: 'Get top 20 most starred GH repos.', value: 'getGHRepos'},
         ],
         validate: function (answer: any) {
           console.log({answer});
@@ -105,6 +129,10 @@ export async function main(inq: any) {
 
     if (action.choice === 'getWeather') {
       return getWeatherForecast();
+    }
+
+    if (action.choice === 'getGHRepos') {
+      return getGithubRepos();
     }
 
     if (action.choice === 'listDmgFiles') {
