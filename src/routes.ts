@@ -37,6 +37,7 @@ const isPromise = (x: any) => {
 
 interface Payload {
   sshKey?: string,
+  dockerImage?: string
 }
 
 
@@ -48,12 +49,17 @@ router.post('/addkey', /// middleware id for capture errors thrown within
     console.log({t});
 
     if (!(t && typeof t === 'object')) {
-      next(vutil.toErrorObj('malformed req', "6b4fd6c6-3aab-41d9-a375-174d26ae0c0e"));
+      next(vutil.toErrorObj('malformed req', "vid/174d26ae0c0e"));
       return;
     }
 
     if (!(t && typeof t.sshKey === 'string' && t.sshKey.length > 10)) {
-      next(vutil.toErrorObj('malformed req:', "vid/08523e05-18b8-4cdf-9338-536143ec08a9"));
+      next(vutil.toErrorObj('malformed req:', "vid/536143ec08a9"));
+      return;
+    }
+
+    if (!(t && typeof t.dockerImage === 'string' && t.dockerImage.length > 10)) {
+      next(vutil.toErrorObj('malformed req:', "vid/c85d6f8beeca"));
       return;
     }
 
@@ -77,12 +83,19 @@ router.post('/addkey', /// middleware id for capture errors thrown within
 
     });
 
+    const imageName = t.dockerImage;
+
+    if(!imageName){
+      next(vutil.toErrorObj('malformed req:', "vid/5bc1ea47ca4b"));
+      return;
+    }
+
     const p2 = new Promise<number>((resolve, reject) => {
       const k = cp.spawn('bash');
       k.stdin.end(`
 
          mkdir -p "$HOME/.ssh";
-         docker run -d --entrypoint tail --name '${containerName}' pytorch/pytorch:latest -f /dev/null;
+         docker run -d --entrypoint tail --name '${containerName}' '${imageName}' -f /dev/null;
          echo 'did the ssh thing - success';
          docker ps;
          docker exec '${containerName}' echo "Ping";
