@@ -6,11 +6,7 @@ CircleCI build status:
 
 </div>
 
-:strawberry:
-:blueberry:
-:banana:
-
-##  hb.xyz
+##  hb.xyz :zap:
 
 Steps
 
