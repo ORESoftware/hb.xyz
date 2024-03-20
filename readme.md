@@ -12,21 +12,23 @@ CircleCI build status:
 
 ##  hb.xyz
 
-Choices
+Steps
 
 1. generate a new ssh key
 2. pick a server to upload it to
-3. pick an image to deploy
+3. pick an image to deploy as container on server
+4. ssh into docker container, using provided command
 
-Steps taken:
+Work done for this repo:
 
 1. install docker on ubuntu machine
 2. run pytorch container on machine
 3. on ubuntu remote - install nodejs
 4. on ubuntu remote - install typescript
-5. on ubuntu remote - git clone server from github
+5. on ubuntu remote - git clone project from github
 3. start a docker container with uuid abc, and then echo to user
 4. `docker run -ti --entrypoint bash pytorch/pytorch:latest`
+5. Create CLI tool to interact with remote
 
 
 
@@ -38,5 +40,13 @@ Steps taken:
 4. tsc -p tsconfig.json
 5. node .
 
+
+<br>
+
+<img src="assets/img.png">
+
+<br>
+
+<img src="assets/img_1.png">
 
 
