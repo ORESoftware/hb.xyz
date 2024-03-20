@@ -6,6 +6,65 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as uuid from 'uuid';
 import * as chalk from "chalk";
+import pt from "prepend-transform";
+import axios from 'axios';
+
+
+async function echoDmgFiles(){
+
+  const r = await new Promise((resolve,reject) => {
+
+    const k = cp.spawn('bash');
+    k.stdin.end(`echo $HOME/Downloads/*.dmg | wc -l`);
+    const result = {data: ''};
+    k.stdout.on('data', d => {
+      result.data += String(d || '');
+    });
+
+    k.stderr.pipe(pt(chalk.magenta('weather stderr:'))).pipe(process.stderr);
+
+    k.once('exit', code => {
+      code == 0 ? resolve(result.data) : reject({code});
+    });
+
+  });
+
+  console.log('result count:', String(r || 0).trim());
+
+}
+
+async function getWeatherForecast() {
+
+  const zipCode = await new Promise((resolve, reject) => {
+
+    const k = cp.spawn('bash');
+    k.stdin.end(`curl -s https://ipinfo.io/json | jq -r '.postal'`);
+    const result = {
+      data: ''
+    };
+    k.stdout.on('data', d => {
+      result.data += String(d || '');
+    });
+
+    k.stderr.pipe(pt(chalk.magenta('weather stderr:'))).pipe(process.stderr);
+
+    k.once('exit', code => {
+      code == 0 ? resolve(result.data) : reject({code});
+    });
+
+  });
+
+
+  const apiKey = '9cb326bd59cb035227398bf28a4cb309'
+  const url = `http://api.openweathermap.org/data/2.5/forecast?zip=${zipCode},us&appid=${apiKey}`; // URL for Fahrenheit
+
+
+  const res = await axios.get(url);
+  const result = await res.data
+
+  console.log({result});
+
+}
 
 export async function main(inq: any) {
 
@@ -29,7 +88,11 @@ export async function main(inq: any) {
         type: 'list',
         name: 'choice',
         message: 'Choose one option from the list:',
-        choices: ['Run container on remote machine'],
+        choices: [
+          {name: 'Run container on remote machine', value: 'runContainer'},
+          {name: 'Get weather forecast in your area.', value: 'getWeather'},
+          {name: 'List all .dmg files in Downloads folder', value: 'listDmgFiles'}
+        ],
         validate: function (answer: any) {
           console.log({answer});
           return true;
@@ -39,6 +102,40 @@ export async function main(inq: any) {
 
 
     console.log(' > You have selected:', chalk.blue(action.choice), '...good choice!');
+
+    if (action.choice === 'getWeather') {
+      return getWeatherForecast();
+    }
+
+    if (action.choice === 'listDmgFiles') {
+      return echoDmgFiles();
+    }
+
+    const choices = [
+      'ubuntu@52.12.110.141',
+      'xubuntu@192.168.1.101',
+      'nixos@172.16.32.123',
+      'admin@10.0.45.67',
+      'centos@35.183.156.72',
+      'ec2-user@54.197.23.81'
+    ];
+
+    const sshTo2 = await inq.prompt([
+      {
+        type: 'autocomplete',
+        name: 'choice',
+        message: 'Loaded the pem key. Choose a remote machine to upload the key to:',
+        source: (answersSoFar: any, input: string) => {
+          input = input || '';
+          return new Promise((resolve) => {
+            const fuzzyResult = choices.filter((choice) => String(choice || '').toLowerCase().includes(input.toLowerCase()));
+            resolve(fuzzyResult);
+          });
+        }
+      }
+    ]);
+
+    console.log(sshTo2);
 
     const pemPath = uuid.v4().slice(-12);
 
@@ -56,15 +153,12 @@ export async function main(inq: any) {
     ]);
 
     if (!election.confirmChoice) {
-      console.error('error: user elected not to proceed.');
-      process.nextTick(() => {
-        main(inq);
-      })
+      console.error(chalk.magenta(' > user elected not to proceed. done.'));
       return;
     }
 
-
     try {
+      // the N '' option is
       var k = cp.execSync(`ssh-keygen -t rsa -N '' -b 2048 -m PEM -f ${pemPath}.pem`);
     } catch (err) {
       console.error('had trouble generating pem file:', err);
@@ -89,7 +183,14 @@ export async function main(inq: any) {
         type: 'list',
         name: 'choice',
         message: 'Loaded the pem key. Choose a remote machine to upload the key to:',
-        choices: ['ubuntu@52.12.110.141', 'xubuntu@62.12.400.141', 'nixos@52.12.110.141'],
+        choices: [
+          'ubuntu@52.12.110.141',
+          'xubuntu@192.168.1.101',
+          'nixos@172.16.32.123',
+          'admin@10.0.45.67',
+          'centos@35.183.156.72',
+          'ec2-user@54.197.23.81'
+        ],
         validate: function (answer: any) {
           console.log({answer});
           return true;
@@ -120,10 +221,10 @@ export async function main(inq: any) {
     console.log(' > You have selected:', chalk.blue(dockerImageToRun.choice), '...good choice!');
 
     console.log('the user choices were:')
-    console.log({sshTo, dockerImageToRun});
+    console.log({action, sshTo, dockerImageToRun});
     console.log('here is the command to run:');
 
-  } catch(err){
+  } catch (err) {
     console.error(err);
     process.nextTick(() => {
       main(inq);

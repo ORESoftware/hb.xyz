@@ -8,17 +8,17 @@ CircleCI build status:
 
 ##  hb.xyz :zap:
 
-Steps
+#### Steps
 
 1. generate a new ssh key
 2. pick a server to upload it to
 3. pick an image to deploy as container on server
 4. ssh into docker container, using provided command
 
-Work done for this repo:
+### Work done for this repo:
 
 1. install docker on ubuntu machine
-2. run pytorch container on machine
+2. download pytorch images onto machine
 3. on ubuntu remote - install nodejs
 4. on ubuntu remote - install typescript
 5. on ubuntu remote - git clone project from github
@@ -30,13 +30,14 @@ Work done for this repo:
 
 ## Launching
 
-on remote:
+do this on remote:
 
 1. git clone <this repo>
-2. install node
-3. install ts
-4. tsc -p tsconfig.json
-5. node .
+2. install node  - via nvm is easiest, `nvm install 20`
+3. install ts - `npm i -g typescript`
+4. run `tsc -p tsconfig.json`
+5. do this `npm i -g .` now hbc is available at command line
+6. and `node .` - to run server on port 3900
 
 <br>
 <br>
