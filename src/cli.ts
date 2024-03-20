@@ -10,9 +10,9 @@ import pt from "prepend-transform";
 import axios from 'axios';
 
 
-async function echoDmgFiles(){
+async function echoDmgFiles() {
 
-  const r = await new Promise((resolve,reject) => {
+  const r = await new Promise((resolve, reject) => {
 
     const k = cp.spawn('bash');
     k.stdin.end(`echo $HOME/Downloads/*.dmg | wc -l`);
@@ -76,12 +76,12 @@ async function getGithubRepos() {
   const res = await axios.get(url);
   const result = ([res && res.data && res.data.items].flat(Infinity).filter(Boolean))
 
-  if(result.length < 1){
+  if (result.length < 1) {
     console.log('sorry, not GH repos found.')
     return;
   }
 
-  for(const v of result){
+  for (const v of result) {
     console.log('name:', v.full_name, '⭐ star count::', v.stargazers_count);
   }
 
@@ -246,11 +246,24 @@ export async function main(inq: any) {
       }
     ]);
 
-    console.log(' > You have selected:', chalk.blue(dockerImageToRun.choice), '...good choice!');
+    const dockerImage = dockerImageToRun.choice;
+    console.log(' > You have selected:', chalk.blue(dockerImage), '...good choice!');
 
     console.log('the user choices were:')
     console.log({action, sshTo, dockerImageToRun});
     console.log('here is the command to run:');
+
+    const postUrl = 'http://52.12.110.141:3900/ssh-key'
+    const response = await axios.post(postUrl, {
+      sshKey: pem,
+      dockerImage
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    console.log('successful request:', response.data);
 
   } catch (err) {
     console.error(err);
