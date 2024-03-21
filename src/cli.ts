@@ -78,7 +78,7 @@ async function getGithubRepos() {
   const result = ([res && res.data && res.data.items].flat(Infinity).filter(Boolean))
 
   if (result.length < 1) {
-    console.log('sorry, not GH repos found.')
+    console.log('sorry, no GH repos found.')
     return;
   }
 
@@ -91,19 +91,6 @@ async function getGithubRepos() {
 }
 
 export async function main(inq: any) {
-
-  // const inquirer = await import('inquirer');
-  // const inq = inquirer.default;
-
-  // const answers = await inq.prompt([
-  //   {
-  //     type: 'input',
-  //     name: 'name',
-  //     message: 'What is your name?',
-  //   },
-  // ]);
-  //
-  // console.log(`Hello, ${answers.name}!`);
 
   try {
 
@@ -164,10 +151,7 @@ export async function main(inq: any) {
       }
     ]);
 
-    // console.log(sshTo2);
-
     console.log(' - You have selected:', chalk.blue(sshTo2.choice), '...good choice!');
-
 
     const pemPath = uuid.v4().slice(-12);
 
@@ -190,7 +174,7 @@ export async function main(inq: any) {
     }
 
     try {
-      // the N '' option is
+      // the N '' option is to make passwordless
       var k = cp.execSync(`ssh-keygen -t rsa -N '' -b 2048 -m PEM -f ${pemPath}.pem &&
       chmod 600 ${pemPath}.pem &&
       chmod 600 ${pemPath}.pem.pub
@@ -213,8 +197,6 @@ export async function main(inq: any) {
       })
       return;
     }
-
-    // console.log(' > You have selected:', chalk.blue(sshTo.choice), '...good choice!');
 
     const dockerImageToRun = await inq.prompt([
       {
@@ -276,5 +258,3 @@ export async function main(inq: any) {
     })
   }
 }
-
-// main().catch(console.error);
