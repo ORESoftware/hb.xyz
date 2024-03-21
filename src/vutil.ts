@@ -25,7 +25,6 @@ export const toErrorObj = <T extends { marker: 'VibeErrorObj' }>(err: any, id: s
     errMessage: err && err.message || null,
     errStack: cleanUp([err && err.stack || new Error().stack]),
     details: Array.from(args)
-    // details: [val, ...Array.from(args)]
   };
 
   console.warn("04376165-eb01-49ab-b76b-46b5132d2891", v);
