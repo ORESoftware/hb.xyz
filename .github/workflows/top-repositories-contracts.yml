@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'contracts/**'
+      - 'scripts/**'
       - 'src/github/**'
       - 'src/cli.ts'
       - 'package.json'
@@ -14,6 +15,7 @@ on:
       - main
     paths:
       - 'contracts/**'
+      - 'scripts/**'
       - 'src/github/**'
       - 'src/cli.ts'
       - 'package.json'
@@ -26,7 +28,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check out exact head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -55,8 +57,16 @@ jobs:
       - name: Verify independent TypeSpec and JSON Schema authorities with TJSV
         run: npm run contracts:check
 
+      - name: Prove intentional contract drift stops evaluation
+        run: npm run contracts:negative
+
       - name: Compile TypeScript
         run: npm run tsc
 
       - name: Run deterministic top-repositories tests
         run: node --test dist/github/top-repos.test.js
+
+      - name: Exercise live GitHub API through compiled ESM-to-CommonJS boundary and TJSV admission
+        run: npm run smoke:top-repos
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
