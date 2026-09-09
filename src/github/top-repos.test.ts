@@ -40,8 +40,8 @@ test('fetches the canonical GitHub query, admits extra upstream fields, and retu
 });
 
 test('fails closed when a projected GitHub field violates the TJSV-backed schema', async () => {
-  const items: Array<Record<string, unknown>> = makeRepositories();
-  items[4] = { ...items[4], stargazers_count: 'many' };
+  const items: unknown[] = makeRepositories();
+  items[4] = { ...makeRepositories()[4], stargazers_count: 'many' };
 
   await assert.rejects(
     fetchTopGitHubRepositories(response({ items }), {}),
