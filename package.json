@@ -11,7 +11,9 @@
   "typings": "dist/main.d.ts",
   "scripts": {
     "contracts:check": "tjsv check --typespec=./contracts/github-top-repositories.tsp --schema=./contracts/github-top-repositories.schema.json --report=./.typespec-json-schema-validator/top-repositories-report.json --quiet",
-    "test": "npm run tsc && node --test dist/github/top-repos.test.js",
+    "contracts:negative": "node ./scripts/verify-top-repositories-contract-drift.mjs",
+    "smoke:top-repos": "node ./scripts/live-top-repos-smoke.mjs",
+    "test": "npm run tsc && node --test dist/github/top-repos.test.js && npm run contracts:negative",
     "verify": "npm run contracts:check && npm test",
     "postinstall": "./assets/postinstall.sh",
     "tsc": "tsc"
