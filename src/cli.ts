@@ -2,12 +2,12 @@
 'use strict';
 
 import * as cp from 'child_process';
-import * as path from 'path';
 import * as fs from 'fs';
 import * as uuid from 'uuid';
 import * as chalk from "chalk";
 import pt from "prepend-transform";
 import axios from 'axios';
+import {fetchTopGitHubRepositories} from './github/top-repos';
 
 const isDebug = false;
 
@@ -55,10 +55,11 @@ async function getWeatherForecast() {
 
   });
 
-
-  const apiKey = '9cb326bd59cb035227398bf28a4cb309'
-  const url = `http://api.openweathermap.org/data/2.5/forecast?zip=${zipCode},us&appid=${apiKey}`; // URL for Fahrenheit
-
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENWEATHER_API_KEY is required for weather forecasts.');
+  }
+  const url = `https://api.openweathermap.org/data/2.5/forecast?zip=${zipCode},us&appid=${apiKey}`;
 
   const res = await axios.get(url);
   const result = ([res && res.data && res.data.list].flat(Infinity).filter(Boolean))
@@ -68,26 +69,13 @@ async function getWeatherForecast() {
 }
 
 async function getGithubRepos() {
+  const result = await fetchTopGitHubRepositories();
 
-
-  const apiKey = '9cb326bd59cb035227398bf28a4cb309'
-  const url = `https://api.github.com/search/repositories?q=stars:>1&sort=stars&order=desc&per_page=20`; // URL for Fahrenheit
-
-
-  const res = await axios.get(url);
-  const result = ([res && res.data && res.data.items].flat(Infinity).filter(Boolean))
-
-  if (result.length < 1) {
-    console.log('sorry, no GH repos found.')
-    return;
-  }
-
-  for (const v of result) {
-    console.log('name:', v.full_name, '⭐ star count::', v.stargazers_count);
+  for (const repository of result) {
+    console.log('name:', repository.full_name, '⭐ star count::', repository.stargazers_count);
   }
 
   console.log('(done with results)');
-
 }
 
 export async function main(inq: any) {
@@ -160,7 +148,7 @@ export async function main(inq: any) {
         type: 'confirm',
         name: 'confirmChoice',
         message: `I will generate a new ssh key using: "ssh-keygen -t rsa -b 2048 -m PEM -f '${pemPath}.pem'"`,
-        default: false, // Optional: sets the default answer (yes in this case)
+        default: false,
         validate: function (answer: any) {
           console.log({answer});
           return true;
@@ -174,7 +162,6 @@ export async function main(inq: any) {
     }
 
     try {
-      // the N '' option is to make passwordless
       var k = cp.execSync(`ssh-keygen -t rsa -N '' -b 2048 -m PEM -f ${pemPath}.pem &&
       chmod 600 ${pemPath}.pem &&
       chmod 600 ${pemPath}.pem.pub

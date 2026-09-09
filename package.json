@@ -10,7 +10,9 @@
   "types": "dist/main.d.ts",
   "typings": "dist/main.d.ts",
   "scripts": {
-    "test": "echo 'npm test is currently a no-op'",
+    "contracts:check": "tjsv check --typespec=./contracts/github-top-repositories.tsp --schema=./contracts/github-top-repositories.schema.json --report=./.typespec-json-schema-validator/top-repositories-report.json --quiet",
+    "test": "npm run tsc && node --test dist/github/top-repos.test.js",
+    "verify": "npm run contracts:check && npm test",
     "postinstall": "./assets/postinstall.sh",
     "tsc": "tsc"
   },
@@ -31,6 +33,7 @@
   },
   "homepage": "https://github.com/ORESoftware/typescript-library-skeleton#readme",
   "dependencies": {
+    "@oresoftware/typespec-json-schema-validator": "github:ORESoftware/typespec-json-schema-validator#a4b731fbf82c4d162abd74fd03758fa32bb76176",
     "axios": "^1.6.8",
     "body-parser": "^1.20.2",
     "chalk": "^4.1.2",
@@ -50,5 +53,8 @@
     "@types/node": "^20.11.25",
     "@types/serve-favicon": "^2.5.7",
     "@types/uuid": "^9.0.8"
+  },
+  "engines": {
+    "node": ">=22.9"
   }
 }

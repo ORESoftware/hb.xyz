@@ -1,0 +1,62 @@
+name: Top Repositories Contracts
+
+on:
+  pull_request:
+    paths:
+      - 'contracts/**'
+      - 'src/github/**'
+      - 'src/cli.ts'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.github/workflows/top-repositories-contracts.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'contracts/**'
+      - 'src/github/**'
+      - 'src/cli.ts'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.github/workflows/top-repositories-contracts.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Verify checked-out revision
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22.16.0'
+
+      - name: Install dependencies without mutating the legacy lockfile
+        run: npm install --package-lock=false
+        env:
+          skip_postinstall: 'yes'
+
+      - name: Verify independent TypeSpec and JSON Schema authorities with TJSV
+        run: npm run contracts:check
+
+      - name: Compile TypeScript
+        run: npm run tsc
+
+      - name: Run deterministic top-repositories tests
+        run: node --test dist/github/top-repos.test.js

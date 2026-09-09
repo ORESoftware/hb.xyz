@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hb.github-top-repositories.schema.json",
+  "$defs": {
+    "GitHubRepository": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "GitHubRepository",
+      "type": "object",
+      "properties": {
+        "full_name": { "type": "string" },
+        "stargazers_count": { "type": "integer" }
+      },
+      "required": ["full_name", "stargazers_count"],
+      "unevaluatedProperties": false
+    },
+    "GitHubRepositorySearchResponse": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "GitHubRepositorySearchResponse",
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": { "$ref": "GitHubRepository" }
+        }
+      },
+      "required": ["items"],
+      "unevaluatedProperties": false
+    }
+  }
+}
