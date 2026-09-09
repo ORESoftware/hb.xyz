@@ -34,10 +34,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.12.0'
+          node-version: '22.14.0'
 
       - name: Install dependencies without mutating the legacy lockfile
-        run: npm install --ignore-scripts --package-lock=false
+        run: npm install --package-lock=false
+        env:
+          skip_postinstall: 'yes'
 
       - name: Verify independent TypeSpec and JSON Schema authorities with TJSV
         run: npm run contracts:check
