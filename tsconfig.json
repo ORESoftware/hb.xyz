@@ -11,6 +11,7 @@
     "declaration": true,
     "target": "es2022",
     "module": "commonjs",
+    "esModuleInterop": true,
     "noImplicitAny": true,
     "removeComments": true,
     "allowUnreachableCode": true,
