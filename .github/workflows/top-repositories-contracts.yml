@@ -1,0 +1,49 @@
+name: Top Repositories Contracts
+
+on:
+  pull_request:
+    paths:
+      - 'contracts/**'
+      - 'src/github/**'
+      - 'src/cli.ts'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.github/workflows/top-repositories-contracts.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'contracts/**'
+      - 'src/github/**'
+      - 'src/cli.ts'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.github/workflows/top-repositories-contracts.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+
+      - name: Install dependencies without mutating the legacy lockfile
+        run: npm install --ignore-scripts --package-lock=false
+
+      - name: Verify independent TypeSpec and JSON Schema authorities with TJSV
+        run: npm run contracts:check
+
+      - name: Compile TypeScript
+        run: npm run tsc
+
+      - name: Run deterministic top-repositories tests
+        run: node --test dist/github/top-repos.test.js
