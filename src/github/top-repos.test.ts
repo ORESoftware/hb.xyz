@@ -39,6 +39,42 @@ test('fetches the canonical GitHub query, admits extra upstream fields, and retu
   assert.equal(repositories[19].full_name, 'example/repository-20');
 });
 
+test('prefers GH_TOKEN, falls back to GITHUB_TOKEN, and omits Authorization when neither exists', async () => {
+  const items = makeRepositories();
+  const cases: Array<{ env: NodeJS.ProcessEnv; expected?: string }> = [
+    { env: { GH_TOKEN: 'gh-primary', GITHUB_TOKEN: 'github-secondary' }, expected: 'Bearer gh-primary' },
+    { env: { GITHUB_TOKEN: 'github-fallback' }, expected: 'Bearer github-fallback' },
+    { env: {} },
+  ];
+
+  for (const { env, expected } of cases) {
+    await fetchTopGitHubRepositories(
+      response({ items }, (_url, config) => {
+        assert.equal(config?.headers?.Authorization, expected);
+      }),
+      env,
+    );
+  }
+});
+
+test('fails closed for malformed projected payload variants through TJSV runtime admission', async () => {
+  const base = makeRepositories();
+  const malformed: unknown[] = [
+    { items: null },
+    { items: [...base.slice(0, 19), 42] },
+    { items: [...base.slice(0, 19), { stargazers_count: 100 }] },
+    { items: [...base.slice(0, 19), { full_name: 'example/fractional', stargazers_count: 1.5 }] },
+    { items: [...base.slice(0, 19), { full_name: 123, stargazers_count: 100 }] },
+  ];
+
+  for (const payload of malformed) {
+    await assert.rejects(
+      fetchTopGitHubRepositories(response(payload), {}),
+      /failed TJSV contract admission/,
+    );
+  }
+});
+
 test('fails closed when a projected GitHub field violates the TJSV-backed schema', async () => {
   const items: unknown[] = makeRepositories();
   items[4] = { ...makeRepositories()[4], stargazers_count: 'many' };
@@ -79,6 +115,17 @@ test('rejects partial results instead of silently presenting fewer than top 20',
   );
 });
 
+test('supports a bounded prefix without changing the canonical top-20 GitHub request', async () => {
+  const items = makeRepositories();
+  const repositories = await fetchTopGitHubRepositories(
+    response({ items }, (url) => assert.equal(url, TOP_REPOSITORIES_URL)),
+    {},
+    5,
+  );
+
+  assert.deepEqual(repositories, items.slice(0, 5));
+});
+
 test('propagates GitHub transport failures', async () => {
   const failingGet: HttpGet = async () => {
     throw new Error('GitHub rate limit');
@@ -94,6 +141,11 @@ test('rejects limits outside the contractually supported top-20 window before tr
     return { data: { items: makeRepositories() } };
   };
 
-  await assert.rejects(fetchTopGitHubRepositories(get, {}, 21), /limit must be an integer from 1 through 20/);
+  for (const invalid of [0, 21, -1, 1.5, Number.NaN]) {
+    await assert.rejects(
+      fetchTopGitHubRepositories(get, {}, invalid),
+      /limit must be an integer from 1 through 20/,
+    );
+  }
   assert.equal(called, false);
 });
