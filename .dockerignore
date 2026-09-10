@@ -1,8 +1,8 @@
 node_modules
 .idea
 .vscode
-tsconfig.json
 .github
 test
 .circleci
 *.log
+.typespec-json-schema-validator
