@@ -1,55 +1,120 @@
-name: Build and Deploy Docker Image
+name: Container Admission
 
 on:
+  pull_request:
+    paths:
+      - '.dockerignore'
+      - 'Dockerfile'
+      - 'entrypoint.sh'
+      - 'contracts/**'
+      - 'scripts/**'
+      - 'src/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.github/workflows/main.yaml'
   push:
     branches:
       - main
+    paths:
+      - '.dockerignore'
+      - 'Dockerfile'
+      - 'entrypoint.sh'
+      - 'contracts/**'
+      - 'scripts/**'
+      - 'src/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.github/workflows/main.yaml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: container-admission-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-push:
+  verify-container:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - name: Check out exact head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: '20' # Adjust to match your project's requirements
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
 
-      - name: Cache Node modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install TypeScript globally
-        run: npm install -g typescript@5.3.3
-
-      - name: Build TypeScript
-        run: tsc -p tsconfig.json
-
-      - name: Log in to Docker registry
-        uses: docker/login-action@v1
-        with:
-          registry: xyz # Your Docker registry URL
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build Docker image using custom script
+      - name: Verify checked-out revision
+        shell: bash
         run: |
-          ./path/to/your-build-script.sh
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+
+      - name: Build image with TJSV and deterministic test admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --tag "hb-xyz:${EXPECTED_SHA}" .
+
+      - name: Prove entrypoint does not leak environment and propagates exit status
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="hb-xyz:${EXPECTED_SHA}"
+          sentinel='HB_SENTINEL_VALUE_MUST_NOT_APPEAR'
+
+          output="$(docker run --rm -e HB_SENTINEL_SECRET="$sentinel" "$image" sh -c 'printf "entrypoint-ok\n"' 2>&1)"
+          printf '%s\n' "$output"
+          grep -qx 'entrypoint-ok' <<<"$output"
+          if grep -Fq "$sentinel" <<<"$output"; then
+            echo 'entrypoint leaked a sentinel environment value' >&2
+            exit 1
+          fi
+
+          set +e
+          timeout 10s docker run --rm "$image" sh -c 'exit 17'
+          status=$?
+          set -e
+          test "$status" -eq 17
+
+      - name: Exercise live GitHub API through container TJSV admission
+        shell: bash
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          IMAGE_NAME: xyz/<your-docker-username>/<your-image-name>:latest # Replace with your actual image name
-
-      - name: Push Docker Image
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          ./path/to/your-push-script.sh
+          set -euo pipefail
+          docker run --rm \
+            -e GITHUB_TOKEN \
+            "hb-xyz:${EXPECTED_SHA}" \
+            npm run smoke:top-repos
+
+      - name: Exercise health and readiness endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="hb-xyz:${EXPECTED_SHA}"
+          container_id="$(docker run --rm -d -p 127.0.0.1::3900 "$image")"
+          cleanup() {
+            docker rm -f "$container_id" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          binding="$(docker port "$container_id" 3900/tcp)"
+          port="${binding##*:}"
+
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent --show-error "http://127.0.0.1:${port}/readyz" >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 20 ]; then
+              echo 'container did not become ready' >&2
+              exit 1
+            fi
+            sleep 1
+          done
+
+          test "$(curl --fail --silent --show-error "http://127.0.0.1:${port}/healthz")" = '{"status":"ok"}'
+          test "$(curl --fail --silent --show-error "http://127.0.0.1:${port}/readyz")" = '{"status":"ready"}'
