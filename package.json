@@ -54,7 +54,8 @@
     "@types/inquirer": "^9.0.7",
     "@types/node": "^20.11.25",
     "@types/serve-favicon": "^2.5.7",
-    "@types/uuid": "^9.0.8"
+    "@types/uuid": "^9.0.8",
+    "typescript": "7.0.2"
   },
   "engines": {
     "node": ">=22.9"
