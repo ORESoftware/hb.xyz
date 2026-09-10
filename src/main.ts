@@ -19,6 +19,15 @@ app.use(favicon(path.resolve(process.cwd() + '/favicon.ico')));
 app.use(helmet());
 app.use(bp.urlencoded({extended: true}));
 app.use(bp.json({}));
+
+app.get('/healthz', (_req: Request, res: Response) => {
+  res.status(200).json({status: 'ok'});
+});
+
+app.get('/readyz', (_req: Request, res: Response) => {
+  res.status(200).json({status: 'ready'});
+});
+
 app.use(routes.router);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
